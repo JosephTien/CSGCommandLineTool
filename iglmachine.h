@@ -98,7 +98,7 @@ class IglMachine
 public:
     IglMachine(){}
     void loadObj(const char* filename, std::vector<float> &verts, std::vector<float> &norms, std::vector<unsigned int> &facs);
-    const static int dataNumLimit = 50;
+    const static int dataNumLimit = 1000;
     int curDataTail=0;
     IglMesh mesh[dataNumLimit];
     igl::MeshBooleanType boolean_type;
@@ -118,7 +118,7 @@ public:
         if(tar == -1){
             mesh[curDataTail++].setName(name);
         }else{
-            std::cout << "\"" << name << "\" already exist" << std::endl;
+            std::cout << "Warning : \"" << name << "\" already exist" << std::endl;
         }
     }
     void put(std::string name,std::vector<float> vertices, std::vector<unsigned int> indices){
@@ -209,44 +209,47 @@ public:
             char path[100];sprintf(path,"pool\\%s.obj",name[0].c_str());
             loadObj(path, verts, norms, facs);
             put(name[0], verts, facs);
+            std::cout<<"LOAD " << name[0] <<std::endl;
         }else if(instruction == "COPY" || instruction == "copy"){
             scriptIfs >> name[0] >> name[1];
             tar[0] = searchTar(name[0]);
             tar[1] = searchTar(name[1]);
             put(name[0],mesh[tar[1]].V,mesh[tar[1]].F);
+            std::cout<<"COPY " << name[0] << " " << name[1] <<std::endl;
         }else if(instruction == "WRITE" || instruction == "write"){
             scriptIfs >> name[0];
             if(searchTar(name[0])==-1){
-                std::cout << "\"" << name << "\" not exist" << std::endl;
+                std::cout << "Warning : \"" << name << "\" not exist" << std::endl;
                 return;
             }
             char path[100];sprintf(path,"pool\\%s.obj",name[0].c_str());
             writeFile(name[0] ,path);
+            std::cout<<"WRITE " << name[0] <<std::endl;
         }
         else if(instruction == "+"){
-            //std::cout<<"Start Union..."<<std::endl;
             boolean_type = igl::MESH_BOOLEAN_TYPE_UNION;
             scriptIfs >> name[0] >> name[1] >> name[2];
             tar[0] = searchTar(name[0]);
             tar[1] = searchTar(name[1]);
             tar[2] = searchTar(name[2]);
             igl::copyleft::cgal::mesh_boolean(mesh[tar[1]].V,mesh[tar[1]].F,mesh[tar[2]].V,mesh[tar[2]].F,boolean_type,mesh[tar[0]].V,mesh[tar[0]].F);
+            std::cout<<"CSG Union " << name[0] << " " << name[1] << " " << name[2] <<std::endl;
         }else if(instruction == "-"){
-            //std::cout<<"Start Minus..."<<std::endl;
             boolean_type = igl::MESH_BOOLEAN_TYPE_MINUS;
             scriptIfs >> name[0] >> name[1] >> name[2];
             tar[0] = searchTar(name[0]);
             tar[1] = searchTar(name[1]);
             tar[2] = searchTar(name[2]);
             igl::copyleft::cgal::mesh_boolean(mesh[tar[1]].V,mesh[tar[1]].F,mesh[tar[2]].V,mesh[tar[2]].F,boolean_type,mesh[tar[0]].V,mesh[tar[0]].F);
+            std::cout<<"CSG Minus " << name[0] << " " << name[1] << " " << name[2] <<std::endl;
         }else if(instruction == "*"){
-            //std::cout<<"Start Intersec..."<<std::endl;
             boolean_type = igl::MESH_BOOLEAN_TYPE_INTERSECT;
             scriptIfs >> name[0] >> name[1] >> name[2];
             tar[0] = searchTar(name[0]);
             tar[1] = searchTar(name[1]);
             tar[2] = searchTar(name[2]);
             igl::copyleft::cgal::mesh_boolean(mesh[tar[1]].V,mesh[tar[1]].F,mesh[tar[2]].V,mesh[tar[2]].F,boolean_type,mesh[tar[0]].V,mesh[tar[0]].F);
+            std::cout<<"CSG Intersec " << name[0] << " " << name[1] << " " << name[2] <<std::endl;
         }else if(instruction == "SCALE"){
             float x,y,z;
             scriptIfs >> name[0]>> name[1] >> x >> y >> z;
@@ -259,6 +262,7 @@ public:
                 vertices_new[i+2]*=z;
             }
             put(name[0],vertices_new, mesh[tar[1]].indices);
+            std::cout<<"SCALE " << name[0] << " "  << name[1] <<std::endl;
         }else if(instruction == "TRANS"){
             float x,y,z;
             scriptIfs >> name[0]>> name[1] >> x >> y >> z;
@@ -271,6 +275,7 @@ public:
                 vertices_new[i+2]+=z;
             }
             put(name[0],vertices_new, mesh[tar[1]].indices);
+            std::cout<<"TRANS " << name[0] << " "  << name[1] <<std::endl;
         }
     }
     void fetchTree(std::string name, int tarTree){

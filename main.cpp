@@ -21,6 +21,19 @@ int main(int argc, char *argv[])
     std::string line;
     while(std::getline( std::cin, line )){
         if(line=="exit"||line=="EXIT"||line=="quit"||line=="QUIT")break;
+        if(line=="use"||line=="USE"){
+            std::istringstream iss(line);
+            std::string file;
+            iss >> file;
+            iss >> file;
+            std::ifstream ifs;
+            ifs.open (file);
+            std::string line2;
+            while(std::getline( ifs, line2 )){
+                std::cout << line2 << std::endl;
+                iglMachine.command(line2);
+            }
+        }
         iglMachine.command(line);
     }
 
